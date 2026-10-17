@@ -35,7 +35,11 @@ public class Auto extends OpMode {
     private final Pose parkPose = p.of(10, 105, 0);
 
     private Path intake() {
-        return curve(startPose, controlPose1, intakePose).tangent();
+        return curve(startPose, controlPose1, intakePose).heading(
+                Interpolator.piecewise()
+                        .until(0.5, Interpolator.linear(90, 180))
+                        .until(1, Interpolator.linear(180, 270))
+        );
     }
 
     private Path park () {
