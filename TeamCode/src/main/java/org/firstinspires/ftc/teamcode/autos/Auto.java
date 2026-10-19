@@ -17,38 +17,46 @@ import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
+
 @Autonomous
 public class Auto extends OpMode {
+    private DcMotor frontIntake;
 
     private Follower follower;
     private final PoseFactory p = PoseFactory.degrees();
 
-    private final Pose startPose = p.of(60, 8.75, 90);
-    private final Pose controlPose1 = p.of(24, 66, 0);
+    private final Pose startPose = p.of(59, 8.75, 90);
+    private final Pose controlPose1 = p.of(24, 70, 0);
     private final Pose intakePose = p.of(10, 8.5, 270);
-    private final Pose controlPose2 = p.of(20, 56.75, 0);
-    private final Pose parkPose = p.of(10, 105, 0);
+
+    private final Pose controlPose2 = p.of(21, 118, 0);
+    private final Pose controlPose3 = p.of(61, 111, 0);
+    private final Pose shootPose = p.of(59, 133.25, 270);
+    private final Pose controlPose4 = p.of(61, 111, 0);
+    private final Pose parkPose = p.of(8.75, 106, 270);
 
     private Path intake() {
-        return curve(startPose, controlPose1, intakePose).heading(
-                Interpolator.piecewise()
-                        .until(0.5, Interpolator.linear(90, 180))
-                        .until(1, Interpolator.linear(180, 270))
-        );
+        return curve(startPose, controlPose1, intakePose).tangent();
     }
 
-    private Path park () {
-        return curve(intakePose, controlPose2, parkPose).heading(Interpolator.linear(intakePose, parkPose));
+    private Path shoot() {
+        return curve(intakePose, controlPose2, controlPose3, shootPose).heading(Interpolator.linear(intakePose, shootPose));
+    }
+    private Path park() {
+        return curve(shootPose, controlPose4, parkPose).heading(Interpolator.linear(intakePose, shootPose));
     }
 
     private Command autoRoutine() {
         return sequential(
                 follow(follower, intake()),
+                follow(follower, shoot()),
                 follow(follower, park())
         );
     }
@@ -60,6 +68,8 @@ public class Auto extends OpMode {
         follower = Constants.create(hardwareMap);
         follower.setPose(startPose);
         follower.update();
+
+        frontIntake = hardwareMap.get(DcMotor.class, "frontIntake");
     }
 
     @Override
